@@ -1,6 +1,6 @@
 {
     "name": "csv-geocoder",
-    "version": "1.0.0-beta",
+    "version": "0.5.0",
     "description": "batch geocode addresses, csv in another csv out",
     "preferGlobal": true,
     "bin": {
