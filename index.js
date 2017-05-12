@@ -3,13 +3,21 @@
 require('dotenv').config()
 
 const pjson = require('./package.json')
-console.log('JS Geocoder v', pjson.version, 'started')
-
 const http = require('http')
 const https = require('https')
 const fs = require('fs')
 const d3 = require('d3-dsv')
 
+// const my_ora = require('./my_ora')
+// log(my_ora)
+
+// const progressbar = require('./progressbar')
+
+const chalk = require('chalk')
+
+const log = console.log
+
+log(chalk.white.underline('JS Geocoder v' + pjson.version) + '\n')
 
 module.exports = geocoder
 
@@ -25,7 +33,7 @@ var geocoder = (function () {
     var in_file = process.argv[2]
     var out_file = process.argv[3]
     var latLng = ''
-    var frequency = process.env.REQ_FREQUENCY
+    var frequency = process.env.REQ_FREQUENCY || 1200
 
     var csv = []
 
@@ -46,13 +54,32 @@ var geocoder = (function () {
 
     // END UTILS
 
+
+
+    if (!process.env.GOOGLE_API_KEY) {
+        log(chalk.red('Missing Google API Key'))
+        log(chalk.grey('Get yours from https://console.developers.google.com/'))
+    }
+
+    if (!process.env.GOOGLE_BASE_URI) {
+        log(chalk.red('Missing GOOGLE_BASE_URI'))
+        log(chalk.grey('Add ' + chalk.white('GOOGLE_BASE_URI=https://maps.googleapis.com/maps/api/geocode/json') + ' to your `.env` file'))
+    }
+
+    if (!process.env.REQ_FREQUENCY) {
+        log(chalk.yellow('Missing REQ_FREQUENCY'))
+        log(chalk.grey('defaulting to 1200ms'))
+    }
+
     if (in_file === undefined || out_file === undefined) {
-        console.log('usage: node index.js path/to/input.csv path/to/output.csv')
+        log(chalk.red('Missing arguments'))
+        log(chalk.grey.bold('Usage'))
+        log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
     } else {
 
         fs.readFile(in_file, 'utf8', function (err, data) {
             if (err) {
-                console.error(err)
+                console.error(chalk.red(err))
             }
 
             var dataset = d3.csvParse(data, function (d) {
@@ -85,7 +112,7 @@ var geocoder = (function () {
 
         is_address.forEach(function (i) {
             if (header_columns.includes(i)) {
-                // console.log('Address column found: ', i)
+                // log('Address column found: ', i)
                 address_column = i
                 createOutFile()
             }
@@ -112,7 +139,7 @@ var geocoder = (function () {
         if (address_column !== '') {
             for (let i = 0; i < csv.length; i++) {
                 setTimeout(function () {
-                    // console.log(csv[i][address_column])
+                    // log(csv[i][address_column])
                     sendRequest(csv[i], csv[i][address_column])
                 }, i * frequency)
             }
@@ -126,25 +153,25 @@ var geocoder = (function () {
 
         k++
         var addr = address.replace(/\s/g, '+')
-        var req = process.env.PROVIDER_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
+        var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
 
         https.get(req, function (res) {
             var _d
             res.setEncoding('utf8')
             res.on('data', (d) => {
-                // console.log('...getting chunks > response complete:', res.complete)
+                // log('...getting chunks > response complete:', res.complete)
                 // process.stdout.write(d)
                 // processResponse(origData, d)
                 _d += d
             })
 
             res.on('end', function () {
-                // console.log('... done > response complete:', res.complete)
-                // console.log(res.statusCode)
-                // console.log(typeof res)
-                // console.log(Object.keys(res))
-                // console.log('----------------')
-                // console.log(_d)
+                // log('... done > response complete:', res.complete)
+                // log(res.statusCode)
+                // log(typeof res)
+                // log(Object.keys(res))
+                // log('----------------')
+                // log(_d)
                 // processResponse(_d)
                 processResponse(origData, _d, k)
             })
@@ -156,16 +183,16 @@ var geocoder = (function () {
 
 
     function processResponse(origData, d, k) {
-        // console.log(origData)
-        // console.log(d)
-        // console.log(k)
+        // log(origData)
+        // log(d)
+        // log(k)
 
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
         d = d.replace(/\r/g, '')
 
         // process.stdout.write(d) // writes JSON
-        // console.log(d) // >> writes buffers
+        // log(d) // >> writes buffers
 
         response_data = JSON.parse(d.toString('utf8'))
         // response_data = JSON.parse(d.toString().trim())
@@ -182,24 +209,24 @@ var geocoder = (function () {
                 new_headers += ','
             }
 
-            // console.log(data_row)
+            // log(data_row)
 
             // Would be great not to hardcode these
             new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
-            // console.log(new_headers)
+            // log(new_headers)
 
             fs.appendFile(out_file, new_headers, function (err) {
                 if (err) {
                     console.error(err)
                 } else {
-                    // console.log(d)
-                    console.log('\n----------\n', 'data has been written to', out_file)
+                    // log(d)
+                    log('\n----------\n', 'data has been written to', out_file)
                 }
             })
         }
 
-        console.log('~~~~~~~~~~~~~~~~~~~~')
-        console.log('results count:', response_data.results.length, '\n')
+        log('~~~~~~~~~~~~~~~~~~~~')
+        log('results count:', response_data.results.length, '\n')
 
         var l = response_data.results.length
 
@@ -227,7 +254,7 @@ var geocoder = (function () {
             var _types = (function () {
                 var types = '"'
                 for (let j = 0; j < response_data.results[i].types.length; j++) {
-                    console.log(response_data.results[i].types[j])
+                    log(response_data.results[i].types[j])
                     types += ''
                     types += response_data.results[i].types[j]
                     types += ','
@@ -236,7 +263,7 @@ var geocoder = (function () {
                 return types
             })()
 
-            console.log(_types)
+            log(_types)
 
             var _status = response_data.status
         }
@@ -258,15 +285,15 @@ var geocoder = (function () {
         data_row += _status
         data_row += '\n'
 
-        // console.log(data_row)
+        // log(data_row)
 
 
         fs.appendFile(out_file, data_row, function (err) {
             if (err) {
                 console.error(err)
             } else {
-                // console.log(data_row)
-                console.log('\n----------\n', 'data has been written to', out_file)
+                // log(data_row)
+                log('\n----------\n', 'data has been written to', out_file)
             }
         })
 
