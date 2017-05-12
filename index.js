@@ -25,7 +25,7 @@ var geocoder = (function () {
 
     var is_address = ['ad', 'add', 'addr', 'address']
     var header_columns = []
-    var address_column = ''
+    var address_column = undefined
     var k = 0 // entries count
     var err_count = 0
     var parse_errors = []
@@ -73,7 +73,7 @@ var geocoder = (function () {
 
     if (in_file === undefined || out_file === undefined) {
         log(chalk.red('Missing arguments'))
-        log(chalk.grey.bold('Usage'))
+        log(chalk.white.underline('Usage'))
         log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
     } else {
 
@@ -103,13 +103,13 @@ var geocoder = (function () {
         header_columns = Object.keys(csv[0])
         for (let i = 0; i < header_columns.length; i++) {
             header_columns[i] = header_columns[i].toString().toLowerCase()
+            log(header_columns[i])
         }
         getHeaders()
     }
 
 
     function getHeaders() {
-
         is_address.forEach(function (i) {
             if (header_columns.includes(i)) {
                 // log('Address column found: ', i)
@@ -117,25 +117,25 @@ var geocoder = (function () {
                 createOutFile()
             }
         })
+        // log(chalk.green(address_column))
+        if (address_column === undefined) {
+            console.error(chalk.red('Could not detect geocodable column!'))
+        }
     }
 
     function createOutFile() {
-
-        // var orig_header = header_columns.toString()
-        // fs.writeFile(out_file, orig_header, 'utf8', function (err) {
-
         fs.writeFile(out_file, '', 'utf8', function (err) {
             if (err) {
+                console.error(chalk.red('Failed to write output file!'))
                 throw error
             } else {
-                // console.info(out_file, ' has been created', '\n----------\n')
+                log(chalk.green(out_file, ' has been created', '\n----------\n'))
                 processRows()
             }
         })
     }
 
     function processRows() {
-
         if (address_column !== '') {
             for (let i = 0; i < csv.length; i++) {
                 setTimeout(function () {
@@ -144,7 +144,7 @@ var geocoder = (function () {
                 }, i * frequency)
             }
         } else {
-            console.error('No address column found!')
+            console.error(chalk.red('No address column found!'))
         }
     }
 
@@ -199,8 +199,9 @@ var geocoder = (function () {
 
         var data_row = ''
 
+        // write column headers only once ;)
         if (k === 1) {
-            // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
+
             var new_headers = ''
             var orig_values
 
@@ -212,18 +213,23 @@ var geocoder = (function () {
             // log(data_row)
 
             // Would be great not to hardcode these
+            // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
             new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
             // log(new_headers)
 
             fs.appendFile(out_file, new_headers, function (err) {
                 if (err) {
-                    console.error(err)
-                } else {
-                    // log(d)
-                    log('\n----------\n', 'data has been written to', out_file)
+                    console.error(chalk.red(err))
                 }
+                // else {
+                //     log(d)
+                //     log('\n----------\n', 'data has been written to', out_file)
+                // }
+
             })
         }
+        // end column headers
+
 
         log('~~~~~~~~~~~~~~~~~~~~')
         log('results count:', response_data.results.length, '\n')
@@ -290,11 +296,13 @@ var geocoder = (function () {
 
         fs.appendFile(out_file, data_row, function (err) {
             if (err) {
-                console.error(err)
-            } else {
-                // log(data_row)
-                log('\n----------\n', 'data has been written to', out_file)
+                console.error(chalk.red(err))
             }
+            // else {
+            //     log(data_row)
+            //     log('\n----------\n', 'data has been written to', out_file)
+            // }
+
         })
 
     }
