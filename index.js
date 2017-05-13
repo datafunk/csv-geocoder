@@ -272,26 +272,27 @@ var geocoder = (function () {
             log(_types)
 
             var _status = response_data.status
+
+
+            data_row += '' //_addr_components - not in use
+            data_row += ',"'
+            data_row += _formatted_address
+            data_row += '",'
+            data_row += _lat
+            data_row += ','
+            data_row += _lng
+            data_row += ','
+            data_row += _location_type
+            data_row += ','
+            data_row += _place_id
+            data_row += ','
+            data_row += _types
+            data_row += ','
+            data_row += _status
+            data_row += '\n'
+
+            // log(data_row)
         }
-
-        data_row += '' //_addr_components - not in use
-        data_row += ',"'
-        data_row += _formatted_address
-        data_row += '",'
-        data_row += _lat
-        data_row += ','
-        data_row += _lng
-        data_row += ','
-        data_row += _location_type
-        data_row += ','
-        data_row += _place_id
-        data_row += ','
-        data_row += _types
-        data_row += ','
-        data_row += _status
-        data_row += '\n'
-
-        // log(data_row)
 
 
         fs.appendFile(out_file, data_row, function (err) {
