@@ -1,6 +1,5 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 
-// load .env variables
 require('dotenv').config()
 
 const pjson = require('./package.json')
@@ -8,11 +7,7 @@ const http = require('http')
 const https = require('https')
 const fs = require('fs')
 const d3 = require('d3-dsv')
-
-// const my_ora = require('./my_ora')
-// log(my_ora)
-
-// const progressbar = require('./progressbar')
+const cli = require('cli')
 
 const log = console.log
 const chalk = require('chalk')
@@ -20,6 +15,7 @@ const chalk = require('chalk')
 
 
 log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
+cli.setApp(pjson.name, pjson.version)
 
 module.exports = geocoder
 
@@ -39,7 +35,6 @@ var geocoder = (function () {
     var frequency = process.env.REQ_FREQUENCY || 1200
 
     var csv = []
-
 
     // UTILS
 
@@ -93,6 +88,12 @@ var geocoder = (function () {
 
     }
 
+    function progressbar(k) {
+        let prog = k / r
+        // cli.debug(k / r)
+        cli.progress(prog)
+    }
+
 
     function transformData() {
         for (let i = 0; i < csv.length; i++) {
@@ -133,7 +134,7 @@ var geocoder = (function () {
                 console.error(chalk.red('Failed to write output file!'))
                 throw error
             } else {
-                log(chalk.green(out_file, ' has been created', '\n----------\n'))
+                log(chalk.bold(out_file) + ' has been created')
                 processRows()
             }
         })
@@ -156,6 +157,7 @@ var geocoder = (function () {
     function sendRequest(origData, address) {
 
         k++
+        progressbar(k)
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
 
@@ -327,10 +329,16 @@ var geocoder = (function () {
         })
 
         if (k === r) {
-            log('==================================================')
-            log(chalk.white('Done | Total entries: ' + r + ' | Processed: ' +
-                chalk.green(k) + ' | Errors: ' + chalk.red(err_count)))
-            log('==================================================')
+
+            log('===========================================================================')
+            log('Total entries: ' + r)
+            log('Processed: ' + k)
+            if (err_count > 0) {
+                log('Errors: ' + chalk.red(err_count))
+            } else {
+                log('Errors: ' + err_count)
+            }
+            log('===========================================================================')
         }
 
     }

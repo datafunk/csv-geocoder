@@ -1,6 +1,6 @@
 {
     "name": "csv-geocoder",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "description": "batch geocode addresses, csv in another csv out",
     "preferGlobal": true,
     "bin": {
@@ -26,10 +26,9 @@
     "license": "SEE LICENSE IN LICENSE.txt",
     "homepage": "http://borbely.info/",
     "dependencies": {
-        "chalk": "^1.1.3",
+        "chalk": "1.1.3",
+        "cli": "1.0.1",
         "d3-dsv": "1.0.5",
-        "dotenv": "4.0.0",
-        "ora": "1.2.0",
-        "progress": "2.0.0"
+        "dotenv": "4.0.0"
     }
 }
