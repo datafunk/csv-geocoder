@@ -277,10 +277,12 @@ var geocoder = (function () {
             var _types = (function () {
                 var types = '"'
                 for (let j = 0; j < response_data.results[i].types.length; j++) {
-                    log(response_data.results[i].types[j])
+                    log(chalk.yellow(j, response_data.results[i].types[j]))
                     types += ''
                     types += response_data.results[i].types[j]
-                    types += ','
+                    if (j + 1 < response_data.results[i].types.length) {
+                        types += ','
+                    }
                 }
                 types += '"'
                 return types
