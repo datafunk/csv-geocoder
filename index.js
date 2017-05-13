@@ -1,5 +1,6 @@
 #!/usr/local/bin/node
 
+// load .env variables
 require('dotenv').config()
 
 const pjson = require('./package.json')
@@ -13,11 +14,12 @@ const d3 = require('d3-dsv')
 
 // const progressbar = require('./progressbar')
 
+const log = console.log
 const chalk = require('chalk')
 
-const log = console.log
 
-log(chalk.white.underline('JS Geocoder v' + pjson.version) + '\n')
+
+log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
 
 module.exports = geocoder
 
@@ -26,7 +28,8 @@ var geocoder = (function () {
     var is_address = ['ad', 'add', 'addr', 'address']
     var header_columns = []
     var address_column = undefined
-    var k = 0 // entries count
+    var r = 0 // source rows count
+    var k = 0 // processed rows count
     var err_count = 0
     var parse_errors = []
     var gcode_errors = []
@@ -87,6 +90,7 @@ var geocoder = (function () {
             })
             transformData()
         })
+
     }
 
 
@@ -94,16 +98,16 @@ var geocoder = (function () {
         for (let i = 0; i < csv.length; i++) {
             keysToLowerCase(csv[i])
         }
+        r = csv.length
         showData()
     }
 
 
     function showData() {
-
         header_columns = Object.keys(csv[0])
         for (let i = 0; i < header_columns.length; i++) {
             header_columns[i] = header_columns[i].toString().toLowerCase()
-            log(header_columns[i])
+            // log(header_columns[i])
         }
         getHeaders()
     }
@@ -112,7 +116,7 @@ var geocoder = (function () {
     function getHeaders() {
         is_address.forEach(function (i) {
             if (header_columns.includes(i)) {
-                // log('Address column found: ', i)
+                log('Address column found: ', i)
                 address_column = i
                 createOutFile()
             }
@@ -231,9 +235,9 @@ var geocoder = (function () {
         // end column headers
 
 
-        log('~~~~~~~~~~~~~~~~~~~~')
-        log('results count:', response_data.results.length, '\n')
-        log('response_data:', response_data, '\n')
+        // log('~~~~~~~~~~~~~~~~~~~~')
+        // log('results count:', response_data.results.length, '\n')
+        // log('response_data:', response_data, '\n')
 
         var l = response_data.results.length
 
@@ -250,6 +254,7 @@ var geocoder = (function () {
             }
 
             data_row += ',,,,,,,' + response_data.status + '\n'
+            err_count++
 
         }
 
@@ -272,12 +277,10 @@ var geocoder = (function () {
             var _lng = response_data.results[i].geometry.location.lng
             var _location_type = response_data.results[i].geometry.location_type
             var _place_id = response_data.results[i].place_id
-            // var _types = response_data.results[0].types
 
             var _types = (function () {
                 var types = '"'
                 for (let j = 0; j < response_data.results[i].types.length; j++) {
-                    log(chalk.yellow(j, response_data.results[i].types[j]))
                     types += ''
                     types += response_data.results[i].types[j]
                     if (j + 1 < response_data.results[i].types.length) {
@@ -287,8 +290,6 @@ var geocoder = (function () {
                 types += '"'
                 return types
             })()
-
-            log(_types)
 
             var _status = response_data.status
 
@@ -325,7 +326,16 @@ var geocoder = (function () {
 
         })
 
+        if (k === r) {
+            log('==================================================')
+            log(chalk.white('Done | Total entries: ' + r + ' | Processed: ' +
+                chalk.green(k) + ' | Errors: ' + chalk.red(err_count)))
+            log('==================================================')
+        }
+
     }
     // END codeAddress
+
+
 
 })()
