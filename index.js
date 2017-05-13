@@ -233,8 +233,25 @@ var geocoder = (function () {
 
         log('~~~~~~~~~~~~~~~~~~~~')
         log('results count:', response_data.results.length, '\n')
+        log('response_data:', response_data, '\n')
 
         var l = response_data.results.length
+
+        if (l === 0) {
+            for (keys in origData) {
+                if (!isNaN(origData[keys])) {
+                    data_row += origData[keys]
+                    data_row += ','
+                } else {
+                    data_row += '"'
+                    data_row += origData[keys]
+                    data_row += '",'
+                }
+            }
+
+            data_row += ',,,,,,,' + response_data.status + '\n'
+
+        }
 
         for (let i = 0; i < l; i++) {
 
