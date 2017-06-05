@@ -36,6 +36,7 @@ cli.parse(options)
 
 
 log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
+cli.setApp(pjson.name, pjson.version)
 
 
 
@@ -91,8 +92,7 @@ var geocoder = (function () {
             log(chalk.grey('defaulting to 1200ms'))
         }
 
-    }
-    else {
+    } else {
 
         if (in_file === undefined || out_file === undefined) {
             log(chalk.red('Missing arguments'))
@@ -118,6 +118,12 @@ var geocoder = (function () {
 
     function progressbar(k) {
         let prog = k / r
+        cli.progress(prog)
+    }
+
+    function progressbar(k) {
+        let prog = k / r
+        // cli.debug(k / r)
         cli.progress(prog)
     }
 

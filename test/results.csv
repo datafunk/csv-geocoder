@@ -1,6 +1,5 @@
 id,addr,addr_components,formatted_address,lat,lng,location_type,place_id,types,status
 1,"25 Oxford St, Darlinghurst NSW",,"25 Oxford St, Darlinghurst NSW 2010, Australia",-33.8819799,151.219822,RANGE_INTERPOLATED,Ei4yNSBPeGZvcmQgU3QsIERhcmxpbmdodXJzdCBOU1cgMjAxMCwgQXVzdHJhbGlh,"street_address",OK
 2,"32c Oxford St, Darlinghurst NSW",,"32 Oxford St, Darlinghurst NSW 2010, Australia",-33.87751,151.2135767,ROOFTOP,ChIJCUap_RauEmsR8GBHAoXrlPA,"street_address",OK
-2,"32c Oxford St, Darlinghurst NSW",,"32A Oxford St, Darlinghurst NSW 2010, Australia",-33.8776574,151.2136295,ROOFTOP,ChIJBZraAxeuEmsRVrsr4hg9e9w,"street_address",OK
 23,"Crn Kossuth utca, Sydney, Hungary",,,,,,,,ZERO_RESULTS
 4,"44 Oxford St, Darlinghurst NSW",,"38-46 Oxford St, Darlinghurst NSW 2010, Australia",-33.8778317,151.2139525,ROOFTOP,ChIJU_XPHBeuEmsRR4-9M8D5Goc,"street_address",OK
