@@ -1,6 +1,5 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 
-// load .env variables
 require('dotenv').config()
 
 const pjson = require('./package.json')
@@ -9,17 +8,37 @@ const https = require('https')
 const fs = require('fs')
 const d3 = require('d3-dsv')
 
-// const my_ora = require('./my_ora')
-// log(my_ora)
-
-// const progressbar = require('./progressbar')
-
 const log = console.log
 const chalk = require('chalk')
+const cli = require('cli')
+
+
+// cli.setApp(__dirname + '/package.json')
+var appName = pjson.name,
+    appVersion = pjson.version
+cli.setApp(appName, appVersion)
+// cli.parse({
+//     version: ['--v', 'show current version', 'string', true],
+//     help: ['-h', 'show help', 'string', true],
+//     input: ['-i', 'Input file', 'path'],
+//     bs: ['-bs', 'bullshit', 'string']
+// })
+
+var options = {
+    version: ['--v', 'show current version', 'string', true],
+    help: ['-h', 'show help', 'string', true],
+    input: ['-i', 'Input file', 'path']
+}
+
+cli.parse(options)
+
 
 
 
 log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
+
+
+
 
 module.exports = geocoder
 
@@ -40,7 +59,6 @@ var geocoder = (function () {
 
     var csv = []
 
-
     // UTILS
 
     function keysToLowerCase(obj) {
@@ -57,40 +75,50 @@ var geocoder = (function () {
 
     // END UTILS
 
+    if (!process.env.GOOGLE_API_KEY || !process.env.GOOGLE_BASE_URI || !process.env.REQ_FREQUENCY) {
+        if (!process.env.GOOGLE_API_KEY) {
+            log(chalk.red('Missing Google API Key'))
+            log(chalk.grey('Get yours from https://console.developers.google.com/'))
+        }
 
+        if (!process.env.GOOGLE_BASE_URI) {
+            log(chalk.red('Missing GOOGLE_BASE_URI'))
+            log(chalk.grey('Add ' + chalk.white('GOOGLE_BASE_URI=https://maps.googleapis.com/maps/api/geocode/json') + ' to your `.env` file'))
+        }
 
-    if (!process.env.GOOGLE_API_KEY) {
-        log(chalk.red('Missing Google API Key'))
-        log(chalk.grey('Get yours from https://console.developers.google.com/'))
+        if (!process.env.REQ_FREQUENCY) {
+            log(chalk.yellow('Missing REQ_FREQUENCY'))
+            log(chalk.grey('defaulting to 1200ms'))
+        }
+
     }
+    else {
 
-    if (!process.env.GOOGLE_BASE_URI) {
-        log(chalk.red('Missing GOOGLE_BASE_URI'))
-        log(chalk.grey('Add ' + chalk.white('GOOGLE_BASE_URI=https://maps.googleapis.com/maps/api/geocode/json') + ' to your `.env` file'))
-    }
+        if (in_file === undefined || out_file === undefined) {
+            log(chalk.red('Missing arguments'))
+            log(chalk.white.underline('Usage'))
+            log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
+        } else {
 
-    if (!process.env.REQ_FREQUENCY) {
-        log(chalk.yellow('Missing REQ_FREQUENCY'))
-        log(chalk.grey('defaulting to 1200ms'))
-    }
+            fs.readFile(in_file, 'utf8', function (err, data) {
+                if (err) {
+                    console.error(chalk.red(err))
+                }
 
-    if (in_file === undefined || out_file === undefined) {
-        log(chalk.red('Missing arguments'))
-        log(chalk.white.underline('Usage'))
-        log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
-    } else {
-
-        fs.readFile(in_file, 'utf8', function (err, data) {
-            if (err) {
-                console.error(chalk.red(err))
-            }
-
-            var dataset = d3.csvParse(data, function (d) {
-                csv.push(d)
+                var dataset = d3.csvParse(data, function (d) {
+                    csv.push(d)
+                })
+                transformData()
             })
-            transformData()
-        })
 
+        }
+    }
+
+
+
+    function progressbar(k) {
+        let prog = k / r
+        cli.progress(prog)
     }
 
 
@@ -133,9 +161,10 @@ var geocoder = (function () {
                 console.error(chalk.red('Failed to write output file!'))
                 throw error
             } else {
-                log(chalk.green(out_file, ' has been created', '\n----------\n'))
+                log(chalk.bold(out_file) + ' has been created')
                 processRows()
             }
+            log('===========================================================================')
         })
     }
 
@@ -156,6 +185,7 @@ var geocoder = (function () {
     function sendRequest(origData, address) {
 
         k++
+        // progressbar(k)
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
 
@@ -190,6 +220,7 @@ var geocoder = (function () {
         // log(origData)
         // log(d)
         // log(k)
+        progressbar(k)
 
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
@@ -327,10 +358,16 @@ var geocoder = (function () {
         })
 
         if (k === r) {
-            log('==================================================')
-            log(chalk.white('Done | Total entries: ' + r + ' | Processed: ' +
-                chalk.green(k) + ' | Errors: ' + chalk.red(err_count)))
-            log('==================================================')
+
+            log('===========================================================================')
+            log('Total entries: ' + r)
+            log('Processed: ' + k)
+            if (err_count > 0) {
+                log('Errors: ' + chalk.red(err_count))
+            } else {
+                log('Errors: ' + err_count)
+            }
+            log('===========================================================================')
         }
 
     }
