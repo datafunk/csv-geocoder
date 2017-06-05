@@ -1,5 +1,4 @@
 id,addr,addr_components,formatted_address,lat,lng,location_type,place_id,types,status
-1,"Beelbangera Public School,765 Rankins Springs Rd, Beelbangera NSW 2680",,"765 Rankins Springs Rd, Beelbangera NSW 2680, Australia",-34.2527275,146.1014863,APPROXIMATE,ChIJeXbV9mSsH2sRykylRYXUpCQ,"establishment,point_of_interest,school",OK
 2,"Bradfield College,213 Pacific Highway, St Leonards NSW 2065",,"213 Pacific Hwy, St Leonards NSW 2065, Australia",-33.8211508,151.186486,APPROXIMATE,ChIJQSpjot-uEmsR0oSKyU2_kCw,"establishment,point_of_interest",OK
 3,"Cleveland Street Intensive English High School,200 Chalmers St, Sydney NSW",,"200 Chalmers St, Sydney NSW 2010, Australia",-33.8890621,151.2060585,APPROXIMATE,ChIJY9Eoa9-xEmsR6HCr55nx07Q,"establishment,point_of_interest,school",OK
 4,"Concord West Public School,378 Concord Road, Concord West NSW 2138",,"378 Concord Rd, Concord West NSW 2138, Australia",-33.8399916,151.0874892,APPROXIMATE,ChIJeWrNP9mkEmsRTXI-y1YWbGo,"establishment,point_of_interest,school",OK

@@ -57,6 +57,7 @@ var geocoder = (function () {
     var out_file = process.argv[3]
     var latLng = ''
     var frequency = process.env.REQ_FREQUENCY || 1200
+    var previousRequestComplete = false
 
     var csv = []
 
@@ -168,7 +169,8 @@ var geocoder = (function () {
                 throw error
             } else {
                 log(chalk.bold(out_file) + ' has been created')
-                processRows()
+                // processRows()
+                oneByOne(0, previousRequestComplete = true, 'OK')
             }
             log('===========================================================================')
         })
@@ -187,11 +189,23 @@ var geocoder = (function () {
         }
     }
 
+    // send requests one by one instead of by interval
+    function oneByOne(k, previousRequestComplete, responseStatus) {
+        if (responseStatus !== 'OVER_QUERY_LIMIT' || responseStatus !== 'REQUEST_DENIED') {
+            if (previousRequestComplete === true && address_column !== '' && k + 1 < csv.length) {
+                log(k, csv.length, csv[k][address_column])
+                k++
+                sendRequest(k, csv[k], csv[k][address_column])
+            }
 
-    function sendRequest(origData, address) {
+        } else {
+            console.error(chalk.red('Error:', responseStatus))
+        }
+    }
 
-        k++
-        // progressbar(k)
+
+    function sendRequest(k, row, address) {
+
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
 
@@ -200,20 +214,26 @@ var geocoder = (function () {
             res.setEncoding('utf8')
             res.on('data', (d) => {
                 // log('...getting chunks > response complete:', res.complete)
+                // log(res.statusCode)
+                // log(res.status)
                 // process.stdout.write(d)
-                // processResponse(origData, d)
+                // processResponse(row, d)
                 _d += d
             })
 
             res.on('end', function () {
                 // log('... done > response complete:', res.complete)
                 // log(res.statusCode)
+                // log(res.status)
                 // log(typeof res)
                 // log(Object.keys(res))
                 // log('----------------')
                 // log(_d)
                 // processResponse(_d)
-                processResponse(origData, _d, k)
+                previousRequestComplete = true
+                oneByOne(k, previousRequestComplete, res.status)
+                processResponse(row, _d, k)
+                log(row, k, previousRequestComplete)
             })
         })
 
@@ -222,8 +242,8 @@ var geocoder = (function () {
 
 
 
-    function processResponse(origData, d, k) {
-        // log(origData)
+    function processResponse(row, d, k) {
+        // log(row)
         // log(d)
         // log(k)
         progressbar(k)
@@ -246,7 +266,7 @@ var geocoder = (function () {
             var new_headers = ''
             var orig_values
 
-            for (keys in origData) {
+            for (keys in row) {
                 new_headers += keys
                 new_headers += ','
             }
@@ -279,13 +299,13 @@ var geocoder = (function () {
         var l = response_data.results.length
 
         if (l === 0) {
-            for (keys in origData) {
-                if (!isNaN(origData[keys])) {
-                    data_row += origData[keys]
+            for (keys in row) {
+                if (!isNaN(row[keys])) {
+                    data_row += row[keys]
                     data_row += ','
                 } else {
                     data_row += '"'
-                    data_row += origData[keys]
+                    data_row += row[keys]
                     data_row += '",'
                 }
             }
@@ -297,13 +317,13 @@ var geocoder = (function () {
 
         for (let i = 0; i < l; i++) {
 
-            for (keys in origData) {
-                if (!isNaN(origData[keys])) {
-                    data_row += origData[keys]
+            for (keys in row) {
+                if (!isNaN(row[keys])) {
+                    data_row += row[keys]
                     data_row += ','
                 } else {
                     data_row += '"'
-                    data_row += origData[keys]
+                    data_row += row[keys]
                     data_row += '",'
                 }
             }
