@@ -3,30 +3,18 @@
 require('dotenv').config()
 
 const pjson = require('./package.json')
+const psui = require('./psui')
+const psw = psui.psw
+
 const http = require('http')
 const https = require('https')
 const fs = require('fs')
-const d3 = require('d3-dsv')
+const dsv = require('d3-dsv')
 
 const log = console.log
-const chalk = require('chalk')
 
-function plog(_str) {
-    process.stdout.clearLine()
-    process.stdout.cursorTo(0)
-    _str = _str.toString()
-    process.stdout.write(_str)
-}
-
-
-// cli.setApp(__dirname + '/package.json')
 var appName = pjson.name,
     appVersion = pjson.version
-
-log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
-
-
-
 
 module.exports = geocoder
 
@@ -35,13 +23,13 @@ var geocoder = (function () {
     var is_address = ['ad', 'add', 'addr', 'address']
     var header_columns = []
     var address_column = undefined
-    var r = 0 // source rows count
-    var k = 0 // processed rows count
+    var sr = 0 // source rows count >> r
+    var pr = 0 // processed rows count >> k
     var err_count = 0
     var parse_errors = []
     var gcode_errors = []
-    var in_file = process.argv[2]
-    var out_file = process.argv[3]
+    var in_file = psui.input || process.argv[2]
+    var out_file = psui.output || process.argv[3]
     var latLng = ''
     var frequency = process.env.REQ_FREQUENCY || 1200
     var previousRequestComplete = false
@@ -82,18 +70,18 @@ var geocoder = (function () {
 
     } else {
 
-        if (in_file === undefined || out_file === undefined) {
-            log(chalk.red('Missing arguments'))
-            log(chalk.white.underline('Usage'))
-            log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
-        } else {
-
+        // if (in_file === undefined || out_file === undefined) {
+        //     log(chalk.red('Missing arguments'))
+        //     log(chalk.white.underline('Usage'))
+        //     log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
+        // } else {
+        if (in_file) {
             fs.readFile(in_file, 'utf8', function (err, data) {
                 if (err) {
                     console.error(chalk.red(err))
                 }
 
-                var dataset = d3.csvParse(data, function (d) {
+                var dataset = dsv.csvParse(data, function (d) {
                     csv.push(d)
                 })
                 transformData()
@@ -107,7 +95,7 @@ var geocoder = (function () {
         for (let i = 0; i < csv.length; i++) {
             keysToLowerCase(csv[i])
         }
-        r = csv.length
+        sr = csv.length
         showData()
     }
 
@@ -125,7 +113,7 @@ var geocoder = (function () {
     function getHeaders() {
         is_address.forEach(function (i) {
             if (header_columns.includes(i)) {
-                log('Address column found: ', i)
+                psw('Address column found: ', i)
                 address_column = i
                 createOutFile()
             }
@@ -142,7 +130,8 @@ var geocoder = (function () {
                 console.error(chalk.red('Failed to write output file!'))
                 throw error
             } else {
-                log(chalk.bold(out_file) + ' has been created')
+                // log(chalk.bold(out_file) + ' has been created')
+                psw(out_file + 'has been created')
                 // processRows()
                 oneByOne(0, previousRequestComplete = true, 'OK')
             }
@@ -164,12 +153,12 @@ var geocoder = (function () {
     }
 
     // send requests one by one instead of by interval
-    function oneByOne(k, previousRequestComplete, responseStatus) {
+    function oneByOne(pr, previousRequestComplete, responseStatus) {
         if (responseStatus !== 'OVER_QUERY_LIMIT' || responseStatus !== 'REQUEST_DENIED') {
-            if (previousRequestComplete === true && address_column !== '' && k + 1 < csv.length) {
-                log(k, csv.length, csv[k][address_column])
-                k++
-                sendRequest(k, csv[k], csv[k][address_column])
+            if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
+                log(pr, csv.length, csv[pr][address_column])
+                pr++
+                sendRequest(pr, csv[pr], csv[pr][address_column])
             }
 
         } else {
@@ -178,7 +167,7 @@ var geocoder = (function () {
     }
 
 
-    function sendRequest(k, row, address) {
+    function sendRequest(pr, row, address) {
 
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
@@ -205,9 +194,9 @@ var geocoder = (function () {
                 // log(_d)
                 // processResponse(_d)
                 previousRequestComplete = true
-                oneByOne(k, previousRequestComplete, res.status)
-                processResponse(row, _d, k)
-                log(row, k, previousRequestComplete)
+                oneByOne(pr, previousRequestComplete, res.status)
+                processResponse(row, _d, pr)
+                log('row', row, 'processed row', pr, 'prevComplete', previousRequestComplete)
             })
         })
 
@@ -219,7 +208,7 @@ var geocoder = (function () {
     function processResponse(row, d, k) {
         // log(row)
         // log(d)
-        plog(k)
+        log(k)
         // progressbar(k)
 
         d = d.replace(/undefined{/, '{')
@@ -240,7 +229,7 @@ var geocoder = (function () {
 
         // write column headers only once ;)
         if (k === 1) {
-            log(chalk.red('k=1'))
+            psw('k = 1')
             var new_headers = ''
             var orig_values
 
@@ -361,11 +350,11 @@ var geocoder = (function () {
 
         })
 
-        if (k === r) {
+        if (pr === sr) {
 
             log('===========================================================================')
-            log('Total entries: ' + r)
-            log('Processed: ' + k)
+            log('Total entries: ' + sr)
+            log('Processed: ' + pr)
             if (err_count > 0) {
                 log('Errors: ' + chalk.red(err_count))
             } else {
