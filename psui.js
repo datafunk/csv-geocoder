@@ -49,20 +49,9 @@ psui.progress = progressPct = function (currentCount, maxCount) {
 
     var width = 50
     var pct_1 = width / 100
-
-    // let pct_c = Math.floor(currentPct)
-    let ticks = Math.round(currentPct) * (width / 100)
+    let ticks = Math.floor(currentPct * (width / 100))
     let diff = width - ticks
-
-    // psw(currentPct + '%')
-
-    // var bar = '[' + ' '.repeat(width) + ']' // 2% = 1 tick
-    // marks = '#'.repeat(ticks)
-    // log(marks)
-    // bar = bar.replace(/[#\s]{tick}/, '#')
-    var bar = '[' + '#'.repeat(ticks) + ' '.repeat(diff) + ']'
-
-    psw(bar + ' ' + currentPct + '%')
+    psw('[' + '#'.repeat(ticks) + '_'.repeat(diff) + ']' + ' ' + currentPct.toFixed(1) + '%')
 
 }
 
