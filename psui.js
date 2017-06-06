@@ -10,6 +10,31 @@ const fs = require('fs')
 var psui = {}
 module.exports = psui
 
+psui.parse = parse = function () {
+
+    if (args[2] === '-h' || args[2] === '--help') {
+        readHelpFile()
+    } else {
+        for (let i = 2; i < args.length; i++) {
+            // log(args[i])
+
+            if (args[i] === '-i') {
+                psui.input = args[i + 1]
+                log('input file found: ', psui.input)
+            }
+
+            if (args[i] === '-o') {
+                psui.output = args[i + 1]
+                log('output file found:', psui.output)
+            }
+
+            // if (args[i] === '-h') {
+            //     readHelpFile()
+            // }
+        }
+    }
+}
+
 psui.psw = psw = function (_str) {
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
@@ -48,29 +73,11 @@ psui.progress = progressPct = function (currentCount, maxCount) {
     currentPct = currentCount / pct
 
     var width = 50
-    var pct_1 = width / 100
     let ticks = Math.floor(currentPct * (width / 100))
     let diff = width - ticks
+    // console.log(' ', ticks, diff)
     psw('[' + '#'.repeat(ticks) + '_'.repeat(diff) + ']' + ' ' + currentPct.toFixed(1) + '%')
 
-}
-
-for (let i = 2; i < args.length; i++) {
-    // log(args[i])
-
-    if (args[i] === '-i') {
-        psui.input = args[i + 1]
-        log('input file found: ', psui.input)
-    }
-
-    if (args[i] === '-o') {
-        psui.output = args[i + 1]
-        log('output file found:', psui.output)
-    }
-
-    if (args[i] === '-h') {
-        readHelpFile()
-    }
 }
 
 // print new line before exiting

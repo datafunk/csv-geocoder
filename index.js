@@ -9,7 +9,7 @@ const psw = psui.psw
 const http = require('http')
 const https = require('https')
 const fs = require('fs')
-const dsv = require('d3-dsv')
+const d3 = require('d3-dsv')
 
 const log = console.log
 
@@ -36,6 +36,8 @@ var geocoder = (function () {
 
     var csv = []
 
+    psui.parse()
+
     // UTILS
 
     function keysToLowerCase(obj) {
@@ -54,18 +56,16 @@ var geocoder = (function () {
 
     if (!process.env.GOOGLE_API_KEY || !process.env.GOOGLE_BASE_URI || !process.env.REQ_FREQUENCY) {
         if (!process.env.GOOGLE_API_KEY) {
-            log(chalk.red('Missing Google API Key'))
-            log(chalk.grey('Get yours from https://console.developers.google.com/'))
+            log('Missing Google API Key')
         }
 
         if (!process.env.GOOGLE_BASE_URI) {
-            log(chalk.red('Missing GOOGLE_BASE_URI'))
-            log(chalk.grey('Add ' + chalk.white('GOOGLE_BASE_URI=https://maps.googleapis.com/maps/api/geocode/json') + ' to your `.env` file'))
+            log('Missing GOOGLE_BASE_URI')
         }
 
         if (!process.env.REQ_FREQUENCY) {
-            log(chalk.yellow('Missing REQ_FREQUENCY'))
-            log(chalk.grey('defaulting to 1200ms'))
+            log('Missing REQ_FREQUENCY')
+            log('defaulting to 1200ms')
         }
 
     } else {
@@ -78,10 +78,11 @@ var geocoder = (function () {
         if (in_file) {
             fs.readFile(in_file, 'utf8', function (err, data) {
                 if (err) {
-                    console.error(chalk.red(err))
+                    // console.error(chalk.red(err))
+                    psw('Error: ', err)
                 }
 
-                var dataset = dsv.csvParse(data, function (d) {
+                var dataset = d3.csvParse(data, function (d) {
                     csv.push(d)
                 })
                 transformData()
@@ -135,7 +136,7 @@ var geocoder = (function () {
                 // processRows()
                 oneByOne(0, previousRequestComplete = true, 'OK')
             }
-            log('===========================================================================')
+            // log('===========================================================================')
         })
     }
 
@@ -143,7 +144,6 @@ var geocoder = (function () {
         if (address_column !== '') {
             for (let i = 0; i < csv.length; i++) {
                 setTimeout(function () {
-                    // log(csv[i][address_column])
                     sendRequest(csv[i], csv[i][address_column])
                 }, i * frequency)
             }
@@ -156,7 +156,6 @@ var geocoder = (function () {
     function oneByOne(pr, previousRequestComplete, responseStatus) {
         if (responseStatus !== 'OVER_QUERY_LIMIT' || responseStatus !== 'REQUEST_DENIED') {
             if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
-                log(pr, csv.length, csv[pr][address_column])
                 pr++
                 sendRequest(pr, csv[pr], csv[pr][address_column])
             }
@@ -176,27 +175,13 @@ var geocoder = (function () {
             var _d
             res.setEncoding('utf8')
             res.on('data', (d) => {
-                // log('...getting chunks > response complete:', res.complete)
-                // log(res.statusCode)
-                // log(res.status)
-                // process.stdout.write(d)
-                // processResponse(row, d)
                 _d += d
             })
 
             res.on('end', function () {
-                // log('... done > response complete:', res.complete)
-                // log(res.statusCode)
-                // log(res.status)
-                // log(typeof res)
-                // log(Object.keys(res))
-                // log('----------------')
-                // log(_d)
-                // processResponse(_d)
                 previousRequestComplete = true
                 oneByOne(pr, previousRequestComplete, res.status)
                 processResponse(row, _d, pr)
-                log('row', row, 'processed row', pr, 'prevComplete', previousRequestComplete)
             })
         })
 
@@ -205,31 +190,22 @@ var geocoder = (function () {
 
 
 
-    function processResponse(row, d, k) {
-        // log(row)
-        // log(d)
-        log(k)
-        // progressbar(k)
+    function processResponse(row, d, pr) {
+
+        psui.progress(pr, sr)
 
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
         d = d.replace(/\r/g, '')
 
         // process.stdout.write(d) // writes JSON
-        // log(d) // >> writes buffers
 
         response_data = JSON.parse(d.toString('utf8'))
-        // response_data = JSON.parse(d.toString().trim())
 
         var data_row = ''
 
-        if (k === 0) {
-            log(chalk.red('k=0'))
-        }
-
         // write column headers only once ;)
-        if (k === 1) {
-            psw('k = 1')
+        if (pr === 1) {
             var new_headers = ''
             var orig_values
 
@@ -243,25 +219,15 @@ var geocoder = (function () {
             // Would be great not to hardcode these
             // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
             new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
-            // log(new_headers)
 
             fs.appendFile(out_file, new_headers, function (err) {
                 if (err) {
                     console.error(chalk.red(err))
                 }
-                // else {
-                //     log(d)
-                //     log('\n----------\n', 'data has been written to', out_file)
-                // }
-
             })
         }
         // end column headers
 
-
-        // log('~~~~~~~~~~~~~~~~~~~~')
-        // log('results count:', response_data.results.length, '\n')
-        // log('response_data:', response_data, '\n')
 
         var l = response_data.results.length
 
@@ -343,11 +309,6 @@ var geocoder = (function () {
             if (err) {
                 console.error(chalk.red(err))
             }
-            // else {
-            //     log(data_row)
-            //     log('\n----------\n', 'data has been written to', out_file)
-            // }
-
         })
 
         if (pr === sr) {
