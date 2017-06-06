@@ -68,13 +68,6 @@ var geocoder = (function () {
             log('defaulting to 1200ms')
         }
 
-    } else {
-
-        // if (in_file === undefined || out_file === undefined) {
-        //     log(chalk.red('Missing arguments'))
-        //     log(chalk.white.underline('Usage'))
-        //     log(chalk.green('csv-geocode ' + chalk.white('path/to/input.csv path/to/output.csv')))
-        // } else {
         if (in_file) {
             fs.readFile(in_file, 'utf8', function (err, data) {
                 if (err) {
@@ -89,6 +82,7 @@ var geocoder = (function () {
             })
 
         }
+
     }
 
 

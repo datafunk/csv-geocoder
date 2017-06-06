@@ -6,32 +6,31 @@ const chalk = require('chalk')
 const fs = require('fs')
 // const env = args[0]
 // const scr = args[1]
+const pjson = require('./package.json')
 
 var psui = {}
 module.exports = psui
 
 psui.parse = parse = function () {
 
-    if (args[2] === '-h' || args[2] === '--help') {
-        readHelpFile()
-    } else {
-        for (let i = 2; i < args.length; i++) {
-            // log(args[i])
+    for (let i = 2; i < args.length; i++) {
+        // log(args[i])
 
-            if (args[i] === '-i') {
-                psui.input = args[i + 1]
-                log('input file found: ', psui.input)
-            }
+        if (args[i] === '-h') {
+            readHelpFile()
 
-            if (args[i] === '-o') {
-                psui.output = args[i + 1]
-                log('output file found:', psui.output)
-            }
-
-            // if (args[i] === '-h') {
-            //     readHelpFile()
-            // }
         }
+
+        if (args[i] === '-i') {
+            psui.input = args[i + 1]
+            log('input file found: ', psui.input)
+        }
+
+        if (args[i] === '-o') {
+            psui.output = args[i + 1]
+            log('output file found:', psui.output)
+        }
+
     }
 }
 
@@ -44,11 +43,11 @@ psui.psw = psw = function (_str) {
 psui.readHelpFile = readHelpFile = function () {
     fs.readFile('./help.md', 'utf-8', function (err, data) {
         if (err) {
-            psw(chalk.red('helpfile not found'))
+            psw('helpfile not found')
             process.exit(1)
         } else {
-            log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version + '\n'))
-            log(chalk.yellow(data))
+            log(pjson.name + ' v' + pjson.version + '\n')
+            log(data)
         }
     })
 }
