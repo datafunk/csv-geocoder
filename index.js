@@ -10,33 +10,20 @@ const d3 = require('d3-dsv')
 
 const log = console.log
 const chalk = require('chalk')
-const cli = require('cli')
+
+function plog(_str) {
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    _str = _str.toString()
+    process.stdout.write(_str)
+}
 
 
 // cli.setApp(__dirname + '/package.json')
 var appName = pjson.name,
     appVersion = pjson.version
-cli.setApp(appName, appVersion)
-// cli.parse({
-//     version: ['--v', 'show current version', 'string', true],
-//     help: ['-h', 'show help', 'string', true],
-//     input: ['-i', 'Input file', 'path'],
-//     bs: ['-bs', 'bullshit', 'string']
-// })
-
-var options = {
-    version: ['--v', 'show current version', 'string', true],
-    help: ['-h', 'show help', 'string', true],
-    input: ['-i', 'Input file', 'path']
-}
-
-cli.parse(options)
-
-
-
 
 log(chalk.black.bgWhite(pjson.name + ' v' + pjson.version) + '\n')
-cli.setApp(pjson.name, pjson.version)
 
 
 
@@ -113,19 +100,6 @@ var geocoder = (function () {
             })
 
         }
-    }
-
-
-
-    function progressbar(k) {
-        let prog = k / r
-        cli.progress(prog)
-    }
-
-    function progressbar(k) {
-        let prog = k / r
-        // cli.debug(k / r)
-        cli.progress(prog)
     }
 
 
@@ -245,8 +219,8 @@ var geocoder = (function () {
     function processResponse(row, d, k) {
         // log(row)
         // log(d)
-        // log(k)
-        progressbar(k)
+        plog(k)
+        // progressbar(k)
 
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
@@ -260,9 +234,13 @@ var geocoder = (function () {
 
         var data_row = ''
 
+        if (k === 0) {
+            log(chalk.red('k=0'))
+        }
+
         // write column headers only once ;)
         if (k === 1) {
-
+            log(chalk.red('k=1'))
             var new_headers = ''
             var orig_values
 
