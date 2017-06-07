@@ -96,7 +96,6 @@ var geocoder = (function () {
         header_columns = Object.keys(csv[0])
         for (let i = 0; i < header_columns.length; i++) {
             header_columns[i] = header_columns[i].toString().toLowerCase()
-            // log(header_columns[i])
         }
         getHeaders()
     }
@@ -154,19 +153,6 @@ var geocoder = (function () {
         })
     }
 
-    // Use oneByOne instead
-    // function processRows() {
-    //     if (address_column !== '') {
-    //         for (let i = 0; i < csv.length; i++) {
-    //             setTimeout(function () {
-    //                 sendRequest(csv[i], csv[i][address_column])
-    //             }, i * frequency)
-    //         }
-    //     } else {
-    //         console.error(chalk.red('No address column found!'))
-    //     }
-    // }
-
     // send requests one by one instead of by interval
     function oneByOne(pr, previousRequestComplete, responseStatus) {
         if (responseStatus == 'OVER_QUERY_LIMIT' || responseStatus == 'REQUEST_DENIED') {
@@ -175,15 +161,12 @@ var geocoder = (function () {
         }
 
         if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
-
             sendRequest(pr, csv[pr], csv[pr][address_column])
-            // pr++
         }
     }
 
 
     function sendRequest(pr, row, address) {
-        // console.log(pr, row, address)
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
 
@@ -207,17 +190,15 @@ var geocoder = (function () {
 
 
     function processResponse(row, d, pr) {
-        // console.log(row)
+
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
         d = d.replace(/\r/g, '')
 
         // process.stdout.write(d) // writes JSON
-
         response_data = JSON.parse(d.toString('utf8'))
 
         var data_row = ''
-
         var l = response_data.results.length
 
         if (l === 0) {
@@ -272,7 +253,6 @@ var geocoder = (function () {
 
             var _status = response_data.status
 
-
             data_row += '' //_addr_components - not in use
             data_row += ',"'
             data_row += _formatted_address
@@ -290,7 +270,6 @@ var geocoder = (function () {
             data_row += _status
             data_row += '\n'
 
-            // log(data_row)
         }
 
 
