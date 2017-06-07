@@ -199,8 +199,6 @@ var geocoder = (function () {
 
 
     function processResponse(row, d, pr) {
-        pr++
-        psui.progress(pr, sr)
 
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
@@ -235,7 +233,8 @@ var geocoder = (function () {
             })
         }
         // end column headers
-
+        pr++
+        psui.progress(pr, sr)
 
         var l = response_data.results.length
 
