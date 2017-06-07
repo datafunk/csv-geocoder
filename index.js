@@ -148,7 +148,7 @@ var geocoder = (function () {
                 })
 
                 // now start processing
-                oneByOne(0, previousRequestComplete = true, 'OK')
+                oneByOne(pr, previousRequestComplete = true, 'OK')
             }
             log('===========================================================')
         })
@@ -175,8 +175,9 @@ var geocoder = (function () {
         }
 
         if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
-            pr++
+
             sendRequest(pr, csv[pr], csv[pr][address_column])
+            // pr++
         }
     }
 
@@ -195,6 +196,7 @@ var geocoder = (function () {
 
             res.on('end', function () {
                 previousRequestComplete = true
+                pr++
                 oneByOne(pr, previousRequestComplete, res.status)
                 processResponse(row, _d, pr)
             })
@@ -215,33 +217,6 @@ var geocoder = (function () {
         response_data = JSON.parse(d.toString('utf8'))
 
         var data_row = ''
-
-        // write column headers only once ;)
-        // if (pr === 1) {
-        //     var new_headers = ''
-        //     var orig_values
-        //
-        //     for (keys in row) {
-        //         new_headers += keys
-        //         new_headers += ','
-        //     }
-        //
-        //     // log(data_row)
-        //
-        //     // Would be great not to hardcode these
-        //     // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
-        //     new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
-        //
-        //     fs.appendFile(out_file, new_headers, function (err) {
-        //         if (err) {
-        //             console.error(err)
-        //             process.exit(1)
-        //         }
-        //     })
-        // }
-        // end column headers
-        pr++
-        psui.progress(pr, sr)
 
         var l = response_data.results.length
 
@@ -325,6 +300,10 @@ var geocoder = (function () {
                 process.exit(1)
             }
         })
+
+
+        pr++
+        psui.progress(pr, sr)
 
         if (pr === sr) {
             log('\r')
