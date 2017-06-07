@@ -6,7 +6,7 @@ Options:
 
 Arguments:
   -i input file path: /path/to/input.csv
-  -p provider: google (default), more to come
+  -p provider: [google|osm] defaults to google, more to come
 
 Description:
 

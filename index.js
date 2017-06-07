@@ -26,9 +26,10 @@ var geocoder = (function () {
     var sr = 0 // source rows count >> r
     var pr = 0 // processed rows count >> k
     var err_count = 0
+    var csv = []
     var frequency = process.env.REQ_FREQUENCY || 1200
     var previousRequestComplete = false
-    var csv = []
+    var lastRequestTimestamp = 0
 
     psui.parse()
     var in_file = psui.input
@@ -156,6 +157,10 @@ var geocoder = (function () {
 
     // send requests one by one instead of by interval
     function oneByOne(pr, previousRequestComplete, responseStatus) {
+
+        lastRequestTimestamp = Date.now()
+        // log(lastRequestTimestamp)
+
         if (responseStatus == 'OVER_QUERY_LIMIT' || responseStatus == 'REQUEST_DENIED') {
             console.error('Response Error:', responseStatus)
             process.exit(1)
@@ -187,11 +192,25 @@ var geocoder = (function () {
 
     function providerOSM(pr, row, address) {
         var addr = address.replace(/\s/g, '+')
-        var req = process.env.OSM_BASE_URI + '?q=' + addr + '&format=json'
-        sendRequest(pr, row, req)
+        var req = process.env.OSM_BASE_URI + '?q=' + addr + '&format=json&limit=1'
+
+        // ensuring Nominatim frequency cap adhered to
+        // see https://operations.osmfoundation.org/policies/nominatim/
+        if (Date.now() >= lastRequestTimestamp + 1200) {
+            sendRequest(pr, row, req)
+        } else {
+            setTimeout(function () {
+                sendRequest(pr, row, req)
+            }, 1200)
+        }
+
+
     }
 
     function sendRequest(pr, row, req) {
+
+        // verifying OSM frequency cap
+        // console.log(req, Date.now() - lastRequestTimestamp)
 
         https.get(req, function (res) {
             var _d
@@ -212,14 +231,15 @@ var geocoder = (function () {
 
 
 
-    function processResponse(row, d, pr) {
+    function processResponse(row, _d, pr) {
 
-        d = d.replace(/undefined{/, '{')
-        d = d.replace(/\n/g, '')
-        d = d.replace(/\r/g, '')
+        _d = _d.replace(/undefined{/, '{')
+        _d = _d.replace(/\n/g, '')
+        _d = _d.replace(/\r/g, '')
 
-        // process.stdout.write(d) // writes JSON
-        response_data = JSON.parse(d.toString('utf8'))
+        // process.stdout.write(_d) // writes JSON
+        response_data = JSON.parse(_d.toString('utf8'))
+        // log(typeof response_data, response_data)
 
         var data_row = ''
         var l = response_data.results.length
