@@ -26,9 +26,6 @@ var geocoder = (function () {
     var sr = 0 // source rows count >> r
     var pr = 0 // processed rows count >> k
     var err_count = 0
-    var parse_errors = []
-    var gcode_errors = []
-    var latLng = ''
     var frequency = process.env.REQ_FREQUENCY || 1200
     var previousRequestComplete = false
     var csv = []
@@ -73,8 +70,8 @@ var geocoder = (function () {
     if (in_file) {
         fs.readFile(in_file, 'utf8', function (err, data) {
             if (err) {
-                // console.error(chalk.red(err))
-                psw('Error: ', err)
+                console.error('Error: ', err)
+                process.exit(1)
             }
 
             var dataset = d3.csvParse(data, function (d) {
@@ -108,14 +105,14 @@ var geocoder = (function () {
     function getHeaders() {
         is_address.forEach(function (i) {
             if (header_columns.includes(i)) {
-                // psw('Address column found: ', i)
                 address_column = i
                 createOutFile()
             }
         })
-        // log(chalk.green(address_column))
+
         if (address_column === undefined) {
             console.error('Could not detect geocodable column!')
+            process.exit(1)
         }
     }
 
@@ -130,11 +127,27 @@ var geocoder = (function () {
         fs.writeFile(out_file, '', 'utf8', function (err) {
             if (err) {
                 console.error('Failed to write output file!')
-                throw err
+                process.exit(1)
             } else {
-                // log(chalk.bold(out_file) + ' has been created')
-                // psw(out_file + ' has been created\n')
-                // processRows()
+                // first write the column headers
+                var new_headers = ''
+                // get source file column headers
+                for (keys in csv[0]) {
+                    new_headers += keys
+                    new_headers += ','
+                }
+                // Would be great not to hardcode these, but for the time being...
+                // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
+                new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
+
+                fs.appendFile(out_file, new_headers, function (err) {
+                    if (err) {
+                        console.error(err)
+                        process.exit(1)
+                    }
+                })
+
+                // now start processing
                 oneByOne(0, previousRequestComplete = true, 'OK')
             }
             log('===========================================================')
@@ -156,20 +169,14 @@ var geocoder = (function () {
 
     // send requests one by one instead of by interval
     function oneByOne(pr, previousRequestComplete, responseStatus) {
+        if (responseStatus == 'OVER_QUERY_LIMIT' || responseStatus == 'REQUEST_DENIED') {
+            console.error('Response Error:', responseStatus)
+            process.exit(1)
+        }
 
-        // console.log(pr, previousRequestComplete, responseStatus)
-
-        if (responseStatus !== 'OVER_QUERY_LIMIT' || responseStatus !== 'REQUEST_DENIED') {
-            // console.log(pr, previousRequestComplete, responseStatus)
-            // console.log(previousRequestComplete, address_column, pr + 1 < csv.length)
-            if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
-                // console.log(pr, previousRequestComplete, responseStatus)
-                pr++
-                sendRequest(pr, csv[pr], csv[pr][address_column])
-            }
-
-        } else {
-            psw('Error:', responseStatus)
+        if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
+            pr++
+            sendRequest(pr, csv[pr], csv[pr][address_column])
         }
     }
 
@@ -197,9 +204,8 @@ var geocoder = (function () {
 
 
 
-
     function processResponse(row, d, pr) {
-
+        // console.log(row)
         d = d.replace(/undefined{/, '{')
         d = d.replace(/\n/g, '')
         d = d.replace(/\r/g, '')
@@ -211,27 +217,28 @@ var geocoder = (function () {
         var data_row = ''
 
         // write column headers only once ;)
-        if (pr === 1) {
-            var new_headers = ''
-            var orig_values
-
-            for (keys in row) {
-                new_headers += keys
-                new_headers += ','
-            }
-
-            // log(data_row)
-
-            // Would be great not to hardcode these
-            // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
-            new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
-
-            fs.appendFile(out_file, new_headers, function (err) {
-                if (err) {
-                    console.error(chalk.red(err))
-                }
-            })
-        }
+        // if (pr === 1) {
+        //     var new_headers = ''
+        //     var orig_values
+        //
+        //     for (keys in row) {
+        //         new_headers += keys
+        //         new_headers += ','
+        //     }
+        //
+        //     // log(data_row)
+        //
+        //     // Would be great not to hardcode these
+        //     // var new_headers = ',' + Object.keys(response_data.results[0]) + ',status'
+        //     new_headers += 'addr_components,formatted_address,lat,lng,location_type,place_id,types,status\n'
+        //
+        //     fs.appendFile(out_file, new_headers, function (err) {
+        //         if (err) {
+        //             console.error(err)
+        //             process.exit(1)
+        //         }
+        //     })
+        // }
         // end column headers
         pr++
         psui.progress(pr, sr)
@@ -314,7 +321,8 @@ var geocoder = (function () {
 
         fs.appendFile(out_file, data_row, function (err) {
             if (err) {
-                console.error(chalk.red(err))
+                console.error(err)
+                process.exit(1)
             }
         })
 

@@ -59,7 +59,7 @@ psui.progress = progressPct = function (currentCount, maxCount) {
     let ticks = Math.floor(currentPct * (width / 100))
     let diff = width - ticks
 
-    psw('[' + '#'.repeat(ticks) + '_'.repeat(diff) + ']' + ' ' + currentPct.toFixed(1) + '%')
+    psw('[' + '#'.repeat(ticks) + '-'.repeat(diff) + ']' + ' ' + currentPct.toFixed(1) + '%')
 }
 
 process.on('exit', function () {
