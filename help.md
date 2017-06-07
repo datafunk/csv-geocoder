@@ -2,8 +2,11 @@ Usage: csv-geocoder [options] [arguments]
 
 Options:
   -h --help  show this help file
-  -i input file path: /path/to/input.csv
   -o output file path: /path/to/output.csv
+
+Arguments:
+  -i input file path: /path/to/input.csv
+  -p provider: google (default), more to come
 
 Description:
 

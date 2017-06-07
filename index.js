@@ -33,6 +33,7 @@ var geocoder = (function () {
     psui.parse()
     var in_file = psui.input
     var out_file = psui.output
+    var provider = psui.provider || 'google'
 
     // UTILS
 
@@ -160,15 +161,37 @@ var geocoder = (function () {
             process.exit(1)
         }
 
-        if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
-            sendRequest(pr, csv[pr], csv[pr][address_column])
+        if (provider == 'google') {
+            if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
+                providerGoogle(pr, csv[pr], csv[pr][address_column])
+            }
         }
+
+        if (provider == 'osm') {
+            if (previousRequestComplete === true && address_column !== '' && pr + 1 < csv.length) {
+                providerOSM(pr, csv[pr], csv[pr][address_column])
+            }
+        }
+
+        // else {
+        //     console.error('No alternative provider available')
+        //     process.exit(1)
+        // }
     }
 
-
-    function sendRequest(pr, row, address) {
+    function providerGoogle(pr, row, address) {
         var addr = address.replace(/\s/g, '+')
         var req = process.env.GOOGLE_BASE_URI + '?address=' + addr + '&key=' + process.env.GOOGLE_API_KEY
+        sendRequest(pr, row, req)
+    }
+
+    function providerOSM(pr, row, address) {
+        var addr = address.replace(/\s/g, '+')
+        var req = process.env.OSM_BASE_URI + '?q=' + addr + '&format=json'
+        sendRequest(pr, row, req)
+    }
+
+    function sendRequest(pr, row, req) {
 
         https.get(req, function (res) {
             var _d

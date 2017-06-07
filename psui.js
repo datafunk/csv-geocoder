@@ -29,6 +29,12 @@ psui.parse = parse = function () {
         if (args[i] === '-o') {
             psui.output = args[i + 1]
         }
+
+        if (args[i] === '-p') {
+            psui.provider = args[i + 1]
+        }
+
+
     }
 }
 
