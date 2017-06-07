@@ -23,12 +23,12 @@ psui.parse = parse = function () {
 
         if (args[i] === '-i') {
             psui.input = args[i + 1]
-            log('input file found: ', psui.input)
+            // log('input file found: ', psui.input)
         }
 
         if (args[i] === '-o') {
             psui.output = args[i + 1]
-            log('output file found:', psui.output)
+            // log('output file found:', psui.output)
         }
 
     }
@@ -81,5 +81,5 @@ psui.progress = progressPct = function (currentCount, maxCount) {
 
 // print new line before exiting
 process.on('exit', function () {
-    process.stdout.write('\n')
+    process.stdout.write('\r')
 })
